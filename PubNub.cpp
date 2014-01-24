@@ -1,9 +1,6 @@
-#include <avr/pgmspace.h>
 #include <ctype.h>
-#include "PubNub.h"
 
 // #define PUBNUB_DEBUG 1
-
 #ifdef PUBNUB_DEBUG
 #define DBGprint(x...) Serial.print(x)
 #define DBGprintln(x...) Serial.println(x)
@@ -12,19 +9,8 @@
 #define DBGprintln(x...)
 #endif
 
-/* There are some special considerations when using the WiFi libary,
- * compared to the Ethernet library:
- *
- * (i) The client object may return stale data from previous connection,
- * so we should call .flush() after initiating a connection.
- *
- * (ii) It appears .stop() does not block on really terminating
- * the connection, do that manually.
- *
- * (iii) Data may still be available while connected() returns false
- * already; use available() test on a lot of places where we used
- * connected() before.
- */
+/* This implementation is mostly copied from our Arduino client, just
+ * tweaked for Spark Core compatibility. */
 
 class PubNub PubNub;
 
@@ -258,7 +244,7 @@ enum PubNub_BH PubNub::_request_bh(PubNub_BASE_CLIENT &client, unsigned long t_s
 		} else { /* request_state == RS_LOADLINE */
 			/* line[] must be enough to hold
 			 * Transfer-Encoding: chunked (or \r\n) */
-			const static char PROGMEM chunked_str[] = "Transfer-Encoding: chunked\r\n";
+			const static char chunked_str[] = "Transfer-Encoding: chunked\r\n";
 			char line[sizeof(chunked_str)]; /* Not NUL-terminated! */
 			int linelen = 0;
 			char ch = 0;
@@ -292,6 +278,7 @@ enum PubNub_BH PubNub::_request_bh(PubNub_BASE_CLIENT &client, unsigned long t_s
 			WAIT();
 		} while (client.read() != '\n');
 	}
+#undef WAIT
 
 	/* Body begins now. */
 	return PubNub_BH_OK;
@@ -440,4 +427,5 @@ void PubSubClient::_grab_timetoken(uint8_t *nextbuf, size_t nextsize)
 	} while (1);
 	memcpy(timetoken, new_timetoken, new_timetoken_len);
 	timetoken[new_timetoken_len] = 0;
+#undef WAIT
 }

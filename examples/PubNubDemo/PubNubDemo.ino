@@ -7,28 +7,26 @@
   It will just send a hello world message and retrieve one back, reporting
   its deeds on serial console.
 
-  Circuit:
-  * Ethernet shield attached to pins 10, 11, 12, 13
-  * (Optional.) LED on pin 8 for reception indication.
-  * (Optional.) LED on pin 9 for publish indication.
+  To get this to work, in the spark.io web IDE,
+  * Cut'n'paste this code
+  * Instead of the #include <PubNub.h> line, paste PubNub.h contents
+  * At the end, paste PubNub.cpp contents
 
-  created 23 October 2012
+  Circuit:
+  * (Built-in.) LED on pin D7 for reception indication.
+  * (Optional.) LED on pin D6 for publish indication.
+
+  created 22 January 2014
   by Petr Baudis
 
-  https://github.com/pubnub/pubnub-api/tree/master/arduino
+  https://github.com/pubnub/sparkCore
   This code is in the public domain.
   */
 
-#include <SPI.h>
-#include <Ethernet.h>
 #include <PubNub.h>
 
-// Some Ethernet shields have a MAC address printed on a sticker on the shield;
-// fill in that address here, or choose your own at random:
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-
-const int subLedPin = 8;
-const int pubLedPin = 9;
+const int subLedPin = D7;
+const int pubLedPin = D6;
 
 char pubkey[] = "demo";
 char subkey[] = "demo";
@@ -43,12 +41,6 @@ void setup()
 
 	Serial.begin(9600);
 	Serial.println("Serial set up");
-
-	while (!Ethernet.begin(mac)) {
-		Serial.println("Ethernet setup error");
-		delay(1000);
-	}
-	Serial.println("Ethernet set up");
 
 	PubNub.begin(pubkey, subkey);
 	Serial.println("PubNub set up");
@@ -67,9 +59,7 @@ void flash(int ledPin)
 
 void loop()
 {
-	Ethernet.maintain();
-
-	EthernetClient *client;
+	TCPClient *client;
 
 	Serial.println("publishing a message");
 	client = PubNub.publish(channel, "\"\\\"Hello world!\\\" she said.\"");

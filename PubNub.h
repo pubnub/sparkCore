@@ -1,36 +1,25 @@
-#ifndef PubNub_h
-#define PubNub_h
+//#ifndef PubNub_h /* The Spark preprocessor fails at this. */
+//#define PubNub_h
 
+static TCPClient x; /* This fools the Spark preprocessor to include TCPClient for us. */
 
 #include <stdint.h>
+#include <stdio.h>
 
-
-/* By default, the PubNub library is built to work with the Ethernet
- * shield. WiFi shield support can be enabled by commenting the
- * following line and commenting out the line after that. Refer
- * to the PubNubJsonWifi sketch for a complete example. */
-#define PubNub_Ethernet
-//#define PubNub_WiFi
-
-
-#if defined(PubNub_Ethernet)
-#include <Ethernet.h>
-#define PubNub_BASE_CLIENT EthernetClient
-
-#elif defined(PubNub_WiFi)
-#include <WiFi.h>
-#define PubNub_BASE_CLIENT WiFiClient
-
-#else
-#error PubNub_BASE_CLIENT set to an invalid value!
-#endif
+#define PubNub_BASE_CLIENT TCPClient
 
 
 /* Some notes:
  *
- * (i) There is no SSL support on Arduino, it is unfeasible with
- * Arduino Uno or even Arduino Mega's computing power and memory limits.
+ * (0) The Spark.io IDE has no direct support for third-party libraries.
+ * The temporary solution recommended by the Spark.io team for now is
+ * to simply cut'n'paste the header file and the C file into your app
+ * source. We are sorry for the inconveniece!
+ *
+ * (i) There is no SSL support on Spark Core at this point.
  * All the traffic goes on the wire unencrypted and unsigned.
+ * This may change when Spark acquires the ability to work with
+ * standalone libraries.
  *
  * (ii) We re-resolve the origin server IP address before each request.
  * This means some slow-down for intensive communication, but we rather
@@ -40,42 +29,28 @@
  * (iii) We let the users read replies at their leisure instead of
  * returning an already preloaded string so that (a) they can do that
  * in loop() code while taking care of other things as well (b) we don't
- * waste precious RAM by pre-allocating buffers that are never needed.
+ * waste potentially precious RAM by pre-allocating buffers that are
+ * never needed.
  *
- * (iv) If you are having problems connecting, maybe you have hit
- * a bug in Debian's version of Arduino pertaining the DNS code. Try using
- * an IP address as origin and/or upgrading your Arduino package.
+ * (iv) N/A for Spark Core.
  *
  * (v) The optional timeout parameter allows you to specify a timeout
  * period after which the subscribe call shall be retried. Note
  * that this timeout is applied only for reading response, not for
  * connecting or sending data; use retransmission parameters of
- * the Ethernet library to tune this. As a rule of thumb, timeout
+ * the TCPClient library to tune this. As a rule of thumb, timeout
  * smaller than 30 seconds may still block longer with flaky
  * network. Default server-side timeout of PubNub API is 300s.
  *
- * (vi) If some of the PubNub calls fail with your WiFi shield (e.g. you
- * see "subscribe error" and similar messages in serial console), your
- * WiFi shield firmware may be buggy - e.g. a WiFi shield bought
- * commercially in May 2013 had a firmware that had to be upgaded.
- * This is not so difficult to do, simply follow:
+ * (vi) N/A for Spark Core.
  *
- *   	http://arduino.cc/en/Hacking/WiFiShieldFirmwareUpgrading
+ * (vii) N/A for Spark Core.
  *
- * (vii) The vendor firmware for the WiFi shield has dubious TCP implementation;
- * for example, TCP ports of outgoing connections are always chosen from the
- * same sequence, so if you reset your Arduino, some of the new connections
- * may interfere with an outstanding TCP connection that has not been closed
- * before the reset; i.e. you will typically see a single failed request
- * somewhere down the road after a reset.
- *
- * (viii) It is essential to use a new enough Arduino version so that
- * the WiFi library actually works properly. Most notably, version 1.0.5
- * has been confirmed to work while Arduino 1.0.4 is broken.
+ * (viii) N/A for Spark Core.
  */
 
 
-/* This class is a thin EthernetClient wrapper whose goal is to
+/* This class is a thin TCPClient wrapper whose goal is to
  * automatically acquire time token information when reading
  * subscribe call response.
  *
@@ -132,7 +107,7 @@ class PubNub {
 public:
 	/* Init the Pubnub Client API
 	 *
-	 * This should be called after Ethernet.begin().
+	 * This should be called in your setup(), ASAP.
 	 * Note that the string parameters are not copied; do not
 	 * overwrite or free the memory where you stored the keys!
 	 * (If you are passing string literals, don't worry about it.)
@@ -162,8 +137,8 @@ public:
 	 * skipped inside the function. If you do not care about
 	 * the reply, just call client->stop(); immediately.
 	 *
-	 * It returns an object that is typically EthernetClient (but it
-	 * can be a WiFiClient if you enabled the WiFi shield).
+	 * It returns a TCPClient object (see "Firmware Reference" - basically,
+	 * you can read the server's reply from it).
 	 *
 	 * @param string channel required channel name.
 	 * @param string message required message string in JSON format.
@@ -213,4 +188,4 @@ private:
 
 extern class PubNub PubNub;
 
-#endif
+//#endif
